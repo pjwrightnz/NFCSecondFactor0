@@ -8,6 +8,8 @@ import android.widget.ImageView;
 
 public class RegisterstrationActivity extends AppCompatActivity {
 
+    //new comment
+
     Button registerButton;
     EditText userIDEditText, passwordEditText, reenterPasswordEditText, emailEditText;
     ImageView nfcLogo, bTLogo, yorkLogo;
