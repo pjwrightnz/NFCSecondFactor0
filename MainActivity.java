@@ -2,8 +2,6 @@ package com.example.paul.nfcsecondfactor0;
 
 import android.content.Context;
 import android.content.Intent;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //getActionBar().setIcon(R.mipmap.ic_launcher);
+       // getActionBar().setIcon(R.drawable.nfcsign);
 
         // assign logos to image views
         btLogo = (ImageView) findViewById(R.id.btLogo);
@@ -78,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
         }
 
-       // loginNfcAdapter.enableReaderMode(this, this, NfcAdapter.FLAG_READER_NFC_B | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,null);
+       //loginNfcAdapter.enableReaderMode(this, 0, NfcAdapter.FLAG_READER_NFC_B | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,null);
     }
 
 
