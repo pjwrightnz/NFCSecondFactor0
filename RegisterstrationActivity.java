@@ -62,20 +62,26 @@ public class RegisterstrationActivity extends AppCompatActivity {
         reenterPasswordEditText = (EditText) findViewById(R.id.reenterPasswordEditText);
         emailEditText = (EditText) findViewById(R.id.emailEditText);
 
+        //create account button
         createAccountButton = (Button) findViewById(R.id.createAccountButton);
+        //set up listener for when button is clicked
         createAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //check null entries, method below for returning boolean. If any are null, throw Toast
                 if (checkNull(userIDEditText.getText().toString()) || checkNull(passwordEditText.getText().toString()) || checkNull(reenterPasswordEditText.getText().toString()) || checkNull(emailEditText.getText().toString())) {
                     Toast.makeText(getApplicationContext(), "Please complete all fields.", Toast.LENGTH_LONG).show();
+               //check that password and reentry match, if wrong, throw Toast
                 } else if (!passwordEditText.getText().toString().equals(reenterPasswordEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "Your passwords do not match, please reenter.", Toast.LENGTH_LONG).show();
+               //check if userID is already in use, if so throw Toast
                 } else if (UserData.userData.containsKey(userIDEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "This UserID is already in use, please select a different UserID.", Toast.LENGTH_LONG).show();
+                //if all the above checks are passed, register user, save their details and return them back to main activity. UserID is passed back.
                 } else {
                     UserData.userData.put(userIDEditText.getText().toString(), passwordEditText.getText().toString());
                     Intent returnTOMainIntent = new Intent();
