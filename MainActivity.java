@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     Boolean loginAccepted = false;
     EditText userIDInput;
     EditText passwordInput;
-    Button loginButton;
+    Button loginButton, registerButton;
 
     private NfcAdapter loginNfcAdapter;
 
@@ -30,7 +30,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       // getActionBar().setIcon(R.drawable.nfcsign);
+       // set Icon
+        android.support.v7.app.ActionBar menu = getSupportActionBar();
+        menu.setDisplayShowHomeEnabled(true);
+        menu.setLogo(R.drawable.nfcsign);
 
         // assign logos to image views
         btLogo = (ImageView) findViewById(R.id.btLogo);
@@ -55,12 +58,23 @@ public class MainActivity extends AppCompatActivity {
         passwordInput = (EditText) findViewById(R.id.passwordInput);
 
         //assign Buttons
+        //login button
         loginButton = (Button) findViewById(R.id.loginButton);
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 checkLoginDetails();
                 showToast();
+            }
+        });
+
+        //register button
+        registerButton = (Button) findViewById(R.id.registerButton);
+        registerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent newRegisterIntent = new Intent(MainActivity.this, RegisterstrationActivity.class);
+                startActivityForResult(newRegisterIntent, 0);
             }
         });
 
@@ -98,6 +112,11 @@ public class MainActivity extends AppCompatActivity {
             userIDInput.setText(UserData.checkUserData(userIDInput.getText().toString()));
         }
     }
+
+    public void onActivityResult (String userID) {
+        userIDInput.setText(userID);
+    }
+
 //    private void onTagDiscovered(Context context, Intent intent) {
 //        Toast.makeText(getApplicationContext(), "tag read!!!", Toast.LENGTH_LONG).show();
 //    }
