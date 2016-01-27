@@ -76,7 +76,7 @@ public class RegisterstrationActivity extends AppCompatActivity {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "Your passwords do not match, please reenter.", Toast.LENGTH_LONG).show();
-               //check if userID is already in use, if so throw Toast
+               //check if userID is already in use, if so throw Toast...
                 } else if (UserData.userData.containsKey(userIDEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
