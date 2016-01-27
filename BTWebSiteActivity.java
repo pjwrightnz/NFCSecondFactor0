@@ -7,14 +7,14 @@ import android.webkit.WebView;
 
 public class BTWebSiteActivity extends AppCompatActivity {
 
-    WebView webview;
+    WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_btweb_site);
 
-        WebView webView = (WebView) findViewById(R.id.webView);
+        webView = (WebView) findViewById(R.id.webView);
         WebSettings webSettings = webView.getSettings();
         webView.loadUrl("http://home.bt.com/");
         webSettings.setJavaScriptEnabled(true);
