@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
                     checkUserIDExists();
                     checkLoginDetails();
                     showToast();
+                    Intent newBTWebIntent = new Intent(MainActivity.this, BTWebSiteActivity.class);
+                    startActivityForResult(newBTWebIntent, 0);
                     return true;
                 }
                 return false;
