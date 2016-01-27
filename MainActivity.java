@@ -5,20 +5,23 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static String userID;
     ImageView btLogo, yorkLogo, nfcLogo, loginIcon, pwIcon;
     Boolean loginAccepted = false;
     EditText userIDInput, passwordInput;
     Button loginButton, registerButton;
     private NfcAdapter loginNfcAdapter;
-    public static String userID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +61,24 @@ public class MainActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                checkUserIDExists();
                 checkLoginDetails();
                 showToast();
+
+            }
+        });
+
+        //set softkeyboard action listener for logging in
+        passwordInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    checkUserIDExists();
+                    checkLoginDetails();
+                    showToast();
+                    return true;
+                }
+                return false;
             }
         });
 
@@ -72,6 +91,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(newRegisterIntent, 0);
             }
         });
+        //populate user persistance with a test user
+        UserDataPersistance.fillUserData();
 
         //  nfc code
         loginNfcAdapter = NfcAdapter.getDefaultAdapter(this);
@@ -79,15 +100,13 @@ public class MainActivity extends AppCompatActivity {
         if (loginNfcAdapter == null) {
             Toast.makeText(this, "This device doesn't support NFC. Second Factor Authentication unavailable", Toast.LENGTH_LONG).show();
         }
-// check NFC is enabled
+        // check NFC is enabled
         if (!loginNfcAdapter.isEnabled()) {
             Toast.makeText(getApplicationContext(), "Please activate NFC to allow second factor authentication and press Back to return to the application.", Toast.LENGTH_LONG).show();
             startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));
         }
-
-       //loginNfcAdapter.enableReaderMode(this, 0, NfcAdapter.FLAG_READER_NFC_B | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,null);
+        //loginNfcAdapter.enableReaderMode(this, 0, NfcAdapter.FLAG_READER_NFC_B | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,null);
     }
-
 
     private void showToast() {
         Context context = getApplicationContext();
@@ -97,19 +116,34 @@ public class MainActivity extends AppCompatActivity {
             userIDInput.setText("");
             passwordInput.setText("");
         }
-        final Toast toastLogin = Toast.makeText(context, loginToastMessage, Toast.LENGTH_LONG);
+        Toast toastLogin = Toast.makeText(context, loginToastMessage, Toast.LENGTH_LONG);
         toastLogin.show();
     }
 
-    private void checkLoginDetails() {
-        if (passwordInput.getText().toString().equals(UserData.checkUserData(userIDInput.getText().toString()))) {
-            loginAccepted = true;
-            userIDInput.setText(UserData.checkUserData(userIDInput.getText().toString()));
+    private boolean checkUserIDExists() {
+        if (UserDataPersistance.userData.containsKey(userIDInput.getText().toString())) {
+            return true;
+        } else {
+            return false;
         }
     }
 
-    public void onActivityResult (String userID) {
-        userIDInput.setText(userID);
+    private void checkLoginDetails() {
+        if (UserDataPersistance.checkUserData(userIDInput.getText().toString()))
+            if (passwordInput.getText().toString().equals(UserDataPersistance.userData.get(userIDInput.getText().toString()).getPassword())) {
+                loginAccepted = true;
+                //userIDInput.setText(UserDataPersistance.checkUserData(userIDInput.getText().toString()));
+            } else {
+                showToast();
+            }
+        else {
+            showToast();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        userIDInput.setText(data.getStringExtra(MainActivity.userID));
     }
 
 //    private void onTagDiscovered(Context context, Intent intent) {

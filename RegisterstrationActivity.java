@@ -54,7 +54,7 @@ public class RegisterstrationActivity extends AppCompatActivity {
         repwIcon.setImageResource(R.drawable.ic_lock_black_24dp);
 
         emailIcon = (ImageView) findViewById(R.id.emailIcon);
-        repwIcon.setImageResource(R.drawable.ic_email_black_24dp);
+        emailIcon.setImageResource(R.drawable.ic_email_black_24dp);
 
         //setup editTexts
         userIDEditText = (EditText) findViewById(R.id.userIDInput);
@@ -77,15 +77,21 @@ public class RegisterstrationActivity extends AppCompatActivity {
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "Your passwords do not match, please reenter.", Toast.LENGTH_LONG).show();
                //check if userID is already in use, if so throw Toast...
-                } else if (UserData.userData.containsKey(userIDEditText.getText().toString())) {
+                } else if (UserDataPersistance.userData.containsKey(userIDEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "This UserID is already in use, please select a different UserID.", Toast.LENGTH_LONG).show();
                 //if all the above checks are passed, register user, save their details and return them back to main activity. UserID is passed back.
                 } else {
-                    UserData.userData.put(userIDEditText.getText().toString(), passwordEditText.getText().toString());
-                    Intent returnTOMainIntent = new Intent();
-                    returnTOMainIntent.putExtra(MainActivity.userID, userIDEditText.getText().toString());
+                    //create new user
+                    User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString());
+                    //add to hashmap
+                    new UserDataPersistance().addNewUser(newUser);
+                    //return to main intent
+                    Intent returnToMainIntent = new Intent(RegisterstrationActivity.this, MainActivity.class);;
+                    returnToMainIntent.putExtra(MainActivity.userID, userIDEditText.getText().toString());
+                    setResult(1, returnToMainIntent);
+                    finish();
                     Toast.makeText(getApplicationContext(), "Your new account has been created.", Toast.LENGTH_LONG).show();
                 }
 
