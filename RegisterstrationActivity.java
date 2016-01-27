@@ -1,5 +1,6 @@
 package com.example.paul.nfcsecondfactor0;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -15,6 +16,16 @@ public class RegisterstrationActivity extends AppCompatActivity {
     Button createAccountButton;
     EditText userIDEditText, passwordEditText, reenterPasswordEditText, emailEditText;
     ImageView nfcLogo, bTLogo, yorkLogo, loginIcon, pwIcon, emailIcon, repwIcon;
+
+    public static Boolean checkNull(String input) {
+
+        if (input.isEmpty()) {
+
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,30 +59,28 @@ public class RegisterstrationActivity extends AppCompatActivity {
         //setup editTexts
         userIDEditText = (EditText) findViewById(R.id.userIDInput);
         passwordEditText = (EditText) findViewById(R.id.passwordInput);
-        reenterPasswordEditText = (EditText) findViewById(R.id.passwordInput);
-        emailEditText = (EditText) findViewById(R.id.passwordInput);
+        reenterPasswordEditText = (EditText) findViewById(R.id.reenterPasswordEditText);
+        emailEditText = (EditText) findViewById(R.id.emailEditText);
 
         createAccountButton = (Button) findViewById(R.id.createAccountButton);
         createAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 if (checkNull(userIDEditText.getText().toString()) || checkNull(passwordEditText.getText().toString()) || checkNull(reenterPasswordEditText.getText().toString()) || checkNull(emailEditText.getText().toString())) {
                     Toast.makeText(getApplicationContext(), "Please complete all fields.", Toast.LENGTH_LONG).show();
-                }
-
-                if (!passwordEditText.getText().toString().equals(reenterPasswordEditText.getText().toString())) {
+                } else if (!passwordEditText.getText().toString().equals(reenterPasswordEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "Your passwords do not match, please reenter.", Toast.LENGTH_LONG).show();
-                }
-
-                if (UserData.userData.containsKey(userIDEditText.getText().toString())) {
+                } else if (UserData.userData.containsKey(userIDEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "This UserID is already in use, please select a different UserID.", Toast.LENGTH_LONG).show();
                 } else {
-
+                    UserData.userData.put(userIDEditText.getText().toString(), passwordEditText.getText().toString());
+                    Intent returnTOMainIntent = new Intent();
+                    returnTOMainIntent.putExtra(MainActivity.userID, userIDEditText.getText().toString());
+                    Toast.makeText(getApplicationContext(), "Your new account has been created.", Toast.LENGTH_LONG).show();
                 }
 
 
@@ -79,15 +88,5 @@ public class RegisterstrationActivity extends AppCompatActivity {
         });
 
 
-    }
-
-    public static Boolean checkNull(String input) {
-
-        if (input.isEmpty()) {
-
-            return true;
-        } else {
-            return false;
-        }
     }
 }

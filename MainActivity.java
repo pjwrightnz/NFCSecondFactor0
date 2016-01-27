@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     EditText userIDInput, passwordInput;
     Button loginButton, registerButton;
     private NfcAdapter loginNfcAdapter;
+    public static String userID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
