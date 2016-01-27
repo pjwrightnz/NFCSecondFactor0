@@ -13,16 +13,10 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
-    ImageView btLogo;
-    ImageView yorkLogo;
-    ImageView nfcLogo;
-    ImageView loginIcon;
-    ImageView pwIcon;
+    ImageView btLogo, yorkLogo, nfcLogo, loginIcon, pwIcon;
     Boolean loginAccepted = false;
-    EditText userIDInput;
-    EditText passwordInput;
+    EditText userIDInput, passwordInput;
     Button loginButton, registerButton;
-
     private NfcAdapter loginNfcAdapter;
 
     @Override
@@ -30,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       // set Icon
+        // set Icon
         android.support.v7.app.ActionBar menu = getSupportActionBar();
         menu.setDisplayShowHomeEnabled(true);
         menu.setLogo(R.drawable.nfcsign);
