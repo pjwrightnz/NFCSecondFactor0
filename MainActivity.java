@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(newBTWebIntent, 0);
 
             }
-        });
+        });//m
 
         //set softkeyboard action listener for logging in
         passwordInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
