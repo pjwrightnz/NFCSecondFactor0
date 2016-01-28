@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         android.support.v7.app.ActionBar menu = getSupportActionBar();
         menu.setDisplayShowHomeEnabled(true);
         menu.setLogo(R.drawable.nfcsign);
+        menu.setDisplayUseLogoEnabled(true);
 
         // assign logos to image views
         btLogo = (ImageView) findViewById(R.id.btLogo);
