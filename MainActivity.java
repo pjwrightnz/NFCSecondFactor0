@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     checkLoginDetails();
                     showToast();
                     Intent newBTWebIntent = new Intent(MainActivity.this, BTWebSiteActivity.class);
-                    startActivityForResult(newBTWebIntent, 0);
+                    startActivity(newBTWebIntent);
                     return true;
                 }
                 return false;
@@ -148,11 +148,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        userIDInput.setText(data.getStringExtra(MainActivity.userID));
+
+        if (resultCode == 1) {
+            userIDInput.setText(data.getStringExtra(MainActivity.userID));
+        }
+
+
     }
 
-//    private void onTagDiscovered(Context context, Intent intent) {
-//        Toast.makeText(getApplicationContext(), "tag read!!!", Toast.LENGTH_LONG).show();
-//    }
+
+
+    private void onTagDiscovered(Context context, Intent intent) {
+        Toast.makeText(getApplicationContext(), "tag read!!!", Toast.LENGTH_LONG).show();
+    }
 
 }

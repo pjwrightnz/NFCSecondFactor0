@@ -20,7 +20,6 @@ public class RegisterstrationActivity extends AppCompatActivity {
     public static Boolean checkNull(String input) {
 
         if (input.isEmpty()) {
-
             return true;
         } else {
             return false;
