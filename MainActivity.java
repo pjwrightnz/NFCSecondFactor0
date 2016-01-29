@@ -4,9 +4,11 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -19,9 +21,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -85,8 +89,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-
 
 
         //set softkeyboard action listener for logging in
@@ -167,14 +169,63 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
+//method is called when a new intent is thrown to the main activity. The logic then handles the
+    // NFC data and captures the Ndef information and parses it. The card ID is then added to the userID
+    // and password and sent to the server for authentication
     @Override
     public void onNewIntent(Intent intent) {
-        Toast.makeText(this, "NFC card recognised!", Toast.LENGTH_LONG).show();
+
+        ArrayList msgs = new ArrayList<>();
+
+        if (intent.hasExtra((NfcAdapter.EXTRA_TAG))) {
+
+           Parcelable[] parcelables = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+
+            if(parcelables != null && parcelables.length > 0) {
+                readTextFromMessage((NdefMessage)parcelables[0]);
+            }
+
+
+            Toast.makeText(this, intent.getStringExtra(NfcAdapter.EXTRA_TAG), Toast.LENGTH_LONG).show();
+        }
+
+//
+//            if (rawMsgs != null) {
+//                for (int i = 0; i < rawMsgs.length; i++) {
+//                    msgs.add(rawMsgs[i]);
+//                }
+//                Toast.makeText(this, "NFC card recognised!", Toast.LENGTH_LONG).show();
+
+    //        Toast.makeText(this, msgs.get(0).toString(), Toast.LENGTH_LONG).show();
+
+
+       // Toast.makeText(this, getIntent().getAction().toString(), Toast.LENGTH_LONG).show();
+
         super.onNewIntent(intent);
     }
 
+    //read the Ndef Message here and convert to a String.
+
+    private void readTextFromMessage(NdefMessage ndefMessage) {
+
+        NdefRecord[] ndefRecords = ndefMessage.getRecords();
+
+        if(ndefRecords != null && ndefRecords.length>0) {
+
+            NdefRecord ndefRecord = ndefRecords[0];
+            short tnf = ndefRecord.getTnf();
+            if(tnf == NdefRecord.TNF_WELL_KNOWN) {
+
+            }
+        } else {
+            Toast.makeText(this, "no ndef msgs", Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
+
+    //if app is paused
     @Override
     protected void onResume() {
         Intent intent = new Intent(this, MainActivity.class);
@@ -203,27 +254,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
- //   @Override
-//    protected void onNewIntent(Intent intent) {
-//        /**
-//         * This method gets called, when a new Intent gets associated with the current activity instance.
-//         * Instead of creating a new activity, onNewIntent will be called. For more information have a look
-//         * at the documentation.
-//         *
-//         * In our case this method gets called, when the user attaches a Tag to the device.
-//         */
-//        handleIntent(intent);
-//    }
 
     private void handleIntent(Intent intent) {
 
     }
-
-
-
-
-//    private void onTagDiscovered(Context context, Intent intent) {
-//        Toast.makeText(getApplicationContext(), "tag read!!!", Toast.LENGTH_LONG).show();
-//    }
 
 }
