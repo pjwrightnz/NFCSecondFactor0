@@ -11,7 +11,7 @@ public class UserDataPersistance {
     public static HashMap<String, User> userData = new HashMap<String, User>();
 
     public static void fillUserData() {
-        User testUser = new User("Paul", "pass", "email");
+        User testUser = new User("Paul", "pass", "email", "");
         userData.put(testUser.getUserID(), testUser);
     }
 

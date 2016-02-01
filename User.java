@@ -1,19 +1,39 @@
 package com.example.paul.nfcsecondfactor0;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
+
 /**
  * Created by Paul on 27/01/2016.
  */
+
+@Root
 public class User {
 
+    @Element
     String userID;
+
+    @Element
     String password;
+
+    @Element
     String email;
+
+    @Element
     String nfcCardID;
 
-    public User(String userID, String password, String email, String nfcCardID) {
+    public User(@Element(name="userID") String userID, @Element(name="Password")String password, @Element(name="email") String email, @Element(name="nfcCardID") String nfcCardID) {
         this.userID = userID;
         this.password = password;
         this.email = email;
+        this.nfcCardID = nfcCardID;
+    }
+
+    public String getNfcCardID() {
+        return nfcCardID;
+    }
+
+    public void setNfcCardID(String nfcCardID) {
         this.nfcCardID = nfcCardID;
     }
 
