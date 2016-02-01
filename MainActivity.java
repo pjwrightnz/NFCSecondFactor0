@@ -181,6 +181,8 @@ public class MainActivity extends AppCompatActivity {
 
         ArrayList msgs = new ArrayList<>();
 
+
+
         if (intent.hasExtra((NfcAdapter.EXTRA_TAG))) {
 
            Parcelable[] parcelables = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
