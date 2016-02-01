@@ -1,8 +1,11 @@
 package com.example.paul.nfcsecondfactor0;
 
 import android.content.Intent;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -70,24 +73,25 @@ public class RegisterstrationActivity extends AppCompatActivity {
                 //check null entries, method below for returning boolean. If any are null, throw Toast
                 if (checkNull(userIDEditText.getText().toString()) || checkNull(passwordEditText.getText().toString()) || checkNull(reenterPasswordEditText.getText().toString()) || checkNull(emailEditText.getText().toString())) {
                     Toast.makeText(getApplicationContext(), "Please complete all fields.", Toast.LENGTH_LONG).show();
-               //check that password and reentry match, if wrong, throw Toast
+                    //check that password and reentry match, if wrong, throw Toast
                 } else if (!passwordEditText.getText().toString().equals(reenterPasswordEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "Your passwords do not match, please reenter.", Toast.LENGTH_LONG).show();
-               //check if userID is already in use, if so throw Toast...
+                    //check if userID is already in use, if so throw Toast...
                 } else if (UserDataPersistance.userData.containsKey(userIDEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "This UserID is already in use, please select a different UserID.", Toast.LENGTH_LONG).show();
-                //if all the above checks are passed, register user, save their details and return them back to main activity. UserID is passed back.
+                    //if all the above checks are passed, register user, save their details and return them back to main activity. UserID is passed back.
                 } else {
-                    //create new user
-                    User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString());
+                    //create new user note empty string
+                    User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
                     //add to hashmap
                     new UserDataPersistance().addNewUser(newUser);
                     //return to main intent
-                    Intent returnToMainIntent = new Intent(RegisterstrationActivity.this, MainActivity.class);;
+                    Intent returnToMainIntent = new Intent(RegisterstrationActivity.this, MainActivity.class);
+                    ;
                     returnToMainIntent.putExtra(MainActivity.userID, userIDEditText.getText().toString());
                     setResult(1, returnToMainIntent);
                     finish();
@@ -100,4 +104,35 @@ public class RegisterstrationActivity extends AppCompatActivity {
 
 
     }
+
+    public void onNewIntent(Intent intent) {
+
+        Tag myTag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        Log.i("tag ID", bytesToHexString(myTag.getId()));
+
+
+        if (myTag != null) {
+            nfcLogo.setImageResource(R.drawable.tick);
+            getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
+        }
+        super.onNewIntent(intent);
+    }
+
+    private String bytesToHexString(byte[] src) {
+        StringBuilder stringBuilder = new StringBuilder("0x");
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+
+        char[] buffer = new char[2];
+        for (int i = 0; i < src.length; i++) {
+            buffer[0] = Character.forDigit((src[i] >>> 4) & 0x0F, 16);
+            buffer[1] = Character.forDigit(src[i] & 0x0F, 16);
+            System.out.println(buffer);
+            stringBuilder.append(buffer);
+        }
+
+        return stringBuilder.toString();
+    }
+
 }

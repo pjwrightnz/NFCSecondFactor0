@@ -4,17 +4,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.nfc.tech.Ndef;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -26,10 +22,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
-
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -116,8 +108,11 @@ public class MainActivity extends AppCompatActivity {
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                nfcLogo.setImageResource(R.drawable.nfclogo);
+                getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
                 Intent newRegisterIntent = new Intent(MainActivity.this, RegisterstrationActivity.class);
                 startActivityForResult(newRegisterIntent, 0);
+
             }
         });
         //populate user persistance with a test user
@@ -148,8 +143,7 @@ public class MainActivity extends AppCompatActivity {
             userIDInput.setText("");
             passwordInput.setText("");
         }
-        Toast toastLogin = Toast.makeText(context, loginToastMessage, Toast.LENGTH_LONG);
-        toastLogin.show();
+
     }
 
     private boolean checkUserIDExists() {
@@ -173,64 +167,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//method is called when a new intent is thrown to the main activity. The logic then handles the
+    //method is called when a new intent is thrown to the main activity. The logic then handles the
     // NFC data and captures the Ndef information and parses it. The card ID is then added to the userID
     // and password and sent to the server for authentication
     @Override
     public void onNewIntent(Intent intent) {
 
-        ArrayList msgs = new ArrayList<>();
+        Tag myTag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        Log.i("tag ID", bytesToHexString(myTag.getId()));
 
 
-
-        if (intent.hasExtra((NfcAdapter.EXTRA_TAG))) {
-
-           Parcelable[] parcelables = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-
-            if(parcelables != null && parcelables.length > 0) {
-                readTextFromMessage((NdefMessage)parcelables[0]);
-            }
-
-
-            Toast.makeText(this, intent.getStringExtra(NfcAdapter.EXTRA_TAG), Toast.LENGTH_LONG).show();
+        if (myTag != null) {
+            nfcLogo.setImageResource(R.drawable.tick);
+            getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
         }
-
-//
-//            if (rawMsgs != null) {
-//                for (int i = 0; i < rawMsgs.length; i++) {
-//                    msgs.add(rawMsgs[i]);
-//                }
-//                Toast.makeText(this, "NFC card recognised!", Toast.LENGTH_LONG).show();
-
-    //        Toast.makeText(this, msgs.get(0).toString(), Toast.LENGTH_LONG).show();
-
-
-       // Toast.makeText(this, getIntent().getAction().toString(), Toast.LENGTH_LONG).show();
-
         super.onNewIntent(intent);
     }
 
-    //read the Ndef Message here and convert to a String.
-
-    private void readTextFromMessage(NdefMessage ndefMessage) {
-
-        NdefRecord[] ndefRecords = ndefMessage.getRecords();
-
-        if(ndefRecords != null && ndefRecords.length>0) {
-
-            NdefRecord ndefRecord = ndefRecords[0];
-            short tnf = ndefRecord.getTnf();
-            if(tnf == NdefRecord.TNF_WELL_KNOWN) {
-
-            }
-        } else {
-            Toast.makeText(this, "no ndef msgs", Toast.LENGTH_SHORT).show();
+    // this method takes in a Byte Array and returns a String, utilising a Stroing Builder.
+    private String bytesToHexString(byte[] src) {
+        StringBuilder stringBuilder = new StringBuilder("0x");
+        if (src == null || src.length <= 0) {
+            return null;
         }
 
+        char[] buffer = new char[2];
+        for (int i = 0; i < src.length; i++) {
+            buffer[0] = Character.forDigit((src[i] >>> 4) & 0x0F, 16);
+            buffer[1] = Character.forDigit(src[i] & 0x0F, 16);
+            System.out.println(buffer);
+            stringBuilder.append(buffer);
+        }
+        return stringBuilder.toString();
     }
 
-
-    //if app is paused
+    //if app is paused, the NFC Adaptor is paused. On resume the adaptor is started again.
     @Override
     protected void onResume() {
         Intent intent = new Intent(this, MainActivity.class);
@@ -242,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
     }
 
+    //if app is paused, the NFC Adaptor is paused. This is to ensure the app does not interefer with other NFC apps.
     @Override
     protected void onPause() {
         loginNfcAdapter.disableForegroundDispatch(this);
@@ -264,73 +236,5 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-   /**
-    * Created by Paul on 1/02/2016.
-    * Background task for reading the data. Do not block the UI thread while reading.  *
-    */
-
-    class TagReadTask extends AsyncTask<Tag, Void, String> {
-
-
-        private String readNFCRecordText(NdefRecord record) throws UnsupportedEncodingException {
-        /*
-         * See NFC forum specification for "Text Record Type Definition" at 3.2.1
-         *
-         * http://www.nfc-forum.org/specs/
-         *
-         * bit_7 defines encoding
-         * bit_6 reserved for future use, must be 0
-         * bit_5..0 length of IANA language code
-         */
-
-            byte[] payload = record.getPayload();
-
-            // Get the Text Encoding
-            String textEncoding = "UTF-16";
-            if ((payload[0] & 128) == 0) {
-                textEncoding = "UTF-8";
-            }
-
-            // Get the Language Code
-            int languageCodeLength = payload[0] & 0063;
-
-            // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
-            // e.g. "en"
-
-            // Get the Text
-            return new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
-        }
-
-        @Override
-        protected String doInBackground(Tag... params) {
-            Tag tag = params[0];
-
-            Ndef ndef = Ndef.get(tag);
-            if (ndef == null) {
-                // NDEF is not supported by this Tag.
-                return null;
-            }
-
-            NdefMessage ndefMessage = ndef.getCachedNdefMessage();
-
-            NdefRecord[] records = ndefMessage.getRecords();
-            for (NdefRecord ndefRecord : records) {
-                if (ndefRecord.getTnf() == NdefRecord.TNF_WELL_KNOWN && Arrays.equals(ndefRecord.getType(), NdefRecord.RTD_TEXT)) {
-
-                    return ndefRecord.toString();
-
-                }
-            }
-            return null;
-        }
-
-    @Override
-    protected void onPostExecute(String result) {
-        if (result != null) {
-            userIDInput.setText("Read content: " + result);
-        }
-    }
-
-    }
 
 }
