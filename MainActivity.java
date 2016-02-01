@@ -7,6 +7,9 @@ import android.content.IntentFilter;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
+import android.nfc.Tag;
+import android.nfc.tech.Ndef;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.Settings;
@@ -24,6 +27,7 @@ import android.widget.Toast;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -221,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "no ndef msgs", Toast.LENGTH_SHORT).show();
         }
 
-
     }
 
 
@@ -256,6 +259,75 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void handleIntent(Intent intent) {
+
+    }
+
+   /**
+    * Created by Paul on 1/02/2016.
+    * Background task for reading the data. Do not block the UI thread while reading.  *
+    */
+
+    class TagReadTask extends AsyncTask<Tag, Void, String> {
+
+
+        private String readNFCRecordText(NdefRecord record) throws UnsupportedEncodingException {
+        /*
+         * See NFC forum specification for "Text Record Type Definition" at 3.2.1
+         *
+         * http://www.nfc-forum.org/specs/
+         *
+         * bit_7 defines encoding
+         * bit_6 reserved for future use, must be 0
+         * bit_5..0 length of IANA language code
+         */
+
+            byte[] payload = record.getPayload();
+
+            // Get the Text Encoding
+            String textEncoding = "UTF-16";
+            if ((payload[0] & 128) == 0) {
+                textEncoding = "UTF-8";
+            }
+
+            // Get the Language Code
+            int languageCodeLength = payload[0] & 0063;
+
+            // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
+            // e.g. "en"
+
+            // Get the Text
+            return new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
+        }
+
+        @Override
+        protected String doInBackground(Tag... params) {
+            Tag tag = params[0];
+
+            Ndef ndef = Ndef.get(tag);
+            if (ndef == null) {
+                // NDEF is not supported by this Tag.
+                return null;
+            }
+
+            NdefMessage ndefMessage = ndef.getCachedNdefMessage();
+
+            NdefRecord[] records = ndefMessage.getRecords();
+            for (NdefRecord ndefRecord : records) {
+                if (ndefRecord.getTnf() == NdefRecord.TNF_WELL_KNOWN && Arrays.equals(ndefRecord.getType(), NdefRecord.RTD_TEXT)) {
+
+                    return ndefRecord.toString();
+
+                }
+            }
+            return null;
+        }
+
+    @Override
+    protected void onPostExecute(String result) {
+        if (result != null) {
+            userIDInput.setText("Read content: " + result);
+        }
+    }
 
     }
 

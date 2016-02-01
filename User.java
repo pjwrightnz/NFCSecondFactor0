@@ -8,11 +8,13 @@ public class User {
     String userID;
     String password;
     String email;
+    String nfcCardID;
 
-    public User(String userID, String password, String email) {
+    public User(String userID, String password, String email, String nfcCardID) {
         this.userID = userID;
         this.password = password;
         this.email = email;
+        this.nfcCardID = nfcCardID;
     }
 
     public String getUserID() {
@@ -38,5 +40,7 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+
 
 }
