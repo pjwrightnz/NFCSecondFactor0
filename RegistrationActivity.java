@@ -1,10 +1,10 @@
 package com.example.paul.nfcsecondfactor0;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -20,11 +20,14 @@ public class RegistrationActivity extends AppCompatActivity {
     EditText userIDEditText, passwordEditText, reenterPasswordEditText, emailEditText;
     ImageView nfcLogo, bTLogo, yorkLogo, loginIcon, pwIcon, emailIcon, repwIcon;
     String nfcCardID = "";
-    NfcAdapter registerNfcAdapter;
     MockServer mockServer = new MockServer();
+    private NfcAdapter registerNfcAdapter;
+
+    //pending intent is utilised to for nfc tag activty. It is enabled in onResume and intents are
+    //caught by the on New Intent Activity.
+    PendingIntent pendingIntent;
 
     public static Boolean checkNull(String input) {
-
         if (input.isEmpty()) {
             return true;
         } else {
@@ -67,18 +70,10 @@ public class RegistrationActivity extends AppCompatActivity {
         reenterPasswordEditText = (EditText) findViewById(R.id.reenterPasswordEditText);
         emailEditText = (EditText) findViewById(R.id.emailEditText);
 
-        registerNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-        //  check if there is an NFC capability of the phone
-        if (registerNfcAdapter == null) {
-            Toast.makeText(this, "This device doesn't support NFC. Second Factor Authentication unavailable", Toast.LENGTH_LONG).show();
-        }
-        // check NFC is enabled
-        if (!registerNfcAdapter.isEnabled()) {
-            Toast.makeText(getApplicationContext(), "Please activate NFC to allow second factor authentication and press Back to return to the application.", Toast.LENGTH_LONG).show();
-            startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-        }
+        pendingIntent = PendingIntent.getActivity(this, 0,
+                new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),  0);
 
-        //create account button
+         //create account button
         createAccountButton = (Button) findViewById(R.id.createAccountButton);
         //set up listener for when button is clicked
         createAccountButton.setOnClickListener(new View.OnClickListener() {
@@ -104,10 +99,8 @@ public class RegistrationActivity extends AppCompatActivity {
                     //create new user note empty string
                     //User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
                     //send request to mock server, cardID tba
-                    mockServer.registerUser(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
-                    //add to hashmap
-                    //new UserDataPersistance().addNewUser(newUser);
-                    //return to main intent
+                    mockServer.registerUser(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), nfcCardID);
+                    //add to hashmap and return to main intent
                     Intent returnToMainIntent = new Intent(RegistrationActivity.this, MainActivity.class);
                     returnToMainIntent.putExtra(MainActivity.userID, userIDEditText.getText().toString());
                     setResult(1, returnToMainIntent);
@@ -117,26 +110,23 @@ public class RegistrationActivity extends AppCompatActivity {
             }
         });
     }
-
+    // handles new intents from NFC Cards
+    @Override
     public void onNewIntent(Intent intent) {
-
-       Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_ID);
-       Log.i("tag ID", bytesToHexString(myTag.getId()));
+        Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
 
         if (myTag != null) {
             nfcLogo.setImageResource(R.drawable.tick);
             getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
             nfcCardID = bytesToHexString(myTag.getId());
         }
-        super.onNewIntent(intent);
     }
-
+    //converts tags from Hex to String
     private String bytesToHexString(byte[] src) {
         StringBuilder stringBuilder = new StringBuilder("0x");
         if (src == null || src.length <= 0) {
             return null;
         }
-
         char[] buffer = new char[2];
         for (int i = 0; i < src.length; i++) {
             buffer[0] = Character.forDigit((src[i] >>> 4) & 0x0F, 16);
@@ -144,8 +134,14 @@ public class RegistrationActivity extends AppCompatActivity {
             System.out.println(buffer);
             stringBuilder.append(buffer);
         }
-
         return stringBuilder.toString();
     }
 
+    //enables forground NFC card read
+    @Override
+    protected void onResume() {
+        NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, null, null);
+        super.onResume();
+    }
 }
