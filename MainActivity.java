@@ -22,7 +22,7 @@ import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static String userID;
+    public static String userID, nfcCardID;
     public static File file;
     ImageView btLogo, yorkLogo, nfcLogo, loginIcon, pwIcon;
     Boolean loginAccepted = false;
@@ -30,11 +30,7 @@ public class MainActivity extends AppCompatActivity {
     Button loginButton, registerButton;
     MockServer mockServer = new MockServer();
     private NfcAdapter loginNfcAdapter;
-
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
+    UserDataPersistance udp = new UserDataPersistance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         //set softkeyboard action listener for logging in
         passwordInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -102,9 +97,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(newRegisterIntent, 0);
             }
         });
-        //populate user persistance with a test user
-        UserDataPersistance.fillUserData();
-
+        //populate hashmap with a test user
+        mockServer.seedUserData();
         //  nfc code
         loginNfcAdapter = NfcAdapter.getDefaultAdapter(this);
         //  check if there is an NFC capability of the phone
@@ -119,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void authUser() {
-        int auth = mockServer.authenticateUser(userIDInput.getText().toString(), passwordInput.getText().toString(), "");
+       int auth = mockServer.authenticateUser(userIDInput.getText().toString(), passwordInput.getText().toString(), nfcCardID);
         switch (auth) {
             case 0:
                 showToast("Login successful.");
@@ -127,36 +121,37 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(newBTWebIntent, 0);
                 break;
             case 1:
-                showToast("Your NFC Card did not match the card registered for your account, please try again");
+                showToast("Your NFC Card did not match the card registered for your account, please try again.");
                 break;
             case 2:
-                showToast("Your password did not match the password for your account, please try again");
+                showToast("Your password did not match the password for your account, please try again.");
                 break;
             default:
-                showToast("Login failed, please try again");
+                showToast("Login failed, please try again.");
         }
-
     }
 
     private void showToast(String string) {
         Toast.makeText(getApplicationContext(), string, Toast.LENGTH_LONG).show();
     }
 
-    //method is called when a new intent is thrown to the main activity. The logic then handles the
-    // NFC data and captures the Ndef information and parses it. The card ID is then added to the userID
-    // and password and sent to the server for authentication
+//    method is called when a new intent is thrown to the main activity. The logic then handles the
+//     NFC data and captures the Ndef information and parses it. The card ID is then added to the userID
+//     and password and sent to the server for authentication
     @Override
     public void onNewIntent(Intent intent) {
-
         Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         Log.i("tag ID", bytesToHexString(myTag.getId()));
-
+        mockServer.seedUserData();
 
         if (myTag != null) {
             nfcLogo.setImageResource(R.drawable.tick);
             getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
+            nfcCardID = bytesToHexString(myTag.getId());
+            Log.i("tag ID", nfcCardID);
+            Log.i("User", udp.getUser("Test").toString());
         }
-        super.onNewIntent(intent);
+        //super.onNewIntent(intent);
     }
 
     // this method takes in a Byte Array and returns a String, utilising a Stroing Builder.
@@ -191,7 +186,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         loginNfcAdapter.disableForegroundDispatch(this);
-
         super.onPause();
     }
 

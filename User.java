@@ -10,23 +10,11 @@ import java.io.Serializable;
  */
 
 @Root
-public class User implements Serializable{
+public class User{
 
-    private static final long serialVersionUID = 0L;
+    String userID, password, email, nfcCardID;
 
-    @Element
-    String userID;
-
-    @Element
-    String password;
-
-    @Element
-    String email;
-
-    @Element
-    String nfcCardID;
-
-    public User(@Element(name="userID") String userID, @Element(name="Password")String password, @Element(name="email") String email, @Element(name="nfcCardID") String nfcCardID) {
+    public User(String userID, String password, String email, String nfcCardID) {
         this.userID = userID;
         this.password = password;
         this.email = email;
@@ -35,6 +23,16 @@ public class User implements Serializable{
 
     public String getNfcCardID() {
         return nfcCardID;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "email='" + email + '\'' +
+                ", userID='" + userID + '\'' +
+                ", password='" + password + '\'' +
+                ", nfcCardID='" + nfcCardID + '\'' +
+                '}';
     }
 
     public void setNfcCardID(String nfcCardID) {

@@ -1,9 +1,5 @@
 package com.example.paul.nfcsecondfactor0;
 
-import android.util.Log;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -11,9 +7,7 @@ import java.io.IOException;
  */
 public class MockServer {
 
-    Persister persister = new Persister();
-    File file;
-    Serializer serializer;
+    UserDataPersistance udp = new UserDataPersistance();
     int PASSWORD_FAILED = 2;
     int NFC_FAILED = 1;
     int AUTHENTICATED = 0;
@@ -21,51 +15,37 @@ public class MockServer {
     /*
      * service to create/register a new user.
      */
-
-    public Boolean registerUser(String userID, String email, String password, String nfcCardID) {
-
-        Boolean userRegistered = false;
-        //create new user, check if user already exists
-        User newUser = new User(userID, password, nfcCardID, email);
-
-        serializer = persister;
-        file = new File(MainActivity.file + "_" + userID + ".xml");
-        try {
-            serializer.write(newUser,file);
-        } catch (Exception e) {
-            e.printStackTrace();
+    public Boolean registerUser(String userID, String password, String email, String nfcCardID) {
+        //create new user
+        User newUser = new User(userID, password, email, nfcCardID);
+        //check if user already exists, return false else add user to the Map. Map used instead of
+        //data persistance to keep app lite for proof of concept only.
+        if (udp.checkUserData(userID)) {
+            return false;
+        } else {
+            udp.addNewUser(newUser);
+            return true;
         }
-
-        Log.i("TAG", file.getAbsolutePath());
-        userRegistered = true;
-
-        return userRegistered;
     }
 
+    /*
+     * service to authenticate a user.
+     */
     public int authenticateUser(String userID, String password, String nfcCardID) {
-
-        int returnValue = 2;
-        file = new File(MainActivity.file + "_" + userID + ".xml");
-        if(file.exists()) {
-            try {
-                User regUser = null;
-                regUser = persister.read(User.class, file);
-                if(regUser.getPassword().equals(password)) {
-                    returnValue=1;
-                    if(regUser.getNfcCardID().equals(nfcCardID)) {
-                        returnValue = 0;
-                    }
+        int returnValue = 3;
+        if (udp.checkUserData(userID)) {
+            returnValue = 2;
+            if (udp.getUser(userID).getPassword().equals(password)) {
+                returnValue = 1;
+                if (udp.getUser(userID).getNfcCardID().equals(nfcCardID)) {
+                    returnValue = 0;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
         return returnValue;
     }
 
-    private void writeObject(java.io.ObjectOutputStream out)
-            throws IOException {
-
-
+    public void seedUserData() {
+        registerUser("Test", "pass", "email", "0x6f936924");
     }
 }

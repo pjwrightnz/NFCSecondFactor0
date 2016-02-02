@@ -116,19 +116,17 @@ public class RegistrationActivity extends AppCompatActivity {
                 }
             }
         });
-
-
     }
 
     public void onNewIntent(Intent intent) {
 
-        Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
-        Log.i("tag ID", bytesToHexString(myTag.getId()));
+       Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_ID);
+       Log.i("tag ID", bytesToHexString(myTag.getId()));
 
         if (myTag != null) {
             nfcLogo.setImageResource(R.drawable.tick);
-           // getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
-            //nfcCardID = bytesToHexString(myTag.getId());
+            getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
+            nfcCardID = bytesToHexString(myTag.getId());
         }
         super.onNewIntent(intent);
     }
