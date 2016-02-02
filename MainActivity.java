@@ -17,7 +17,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
@@ -25,12 +24,13 @@ public class MainActivity extends AppCompatActivity {
     public static String userID, nfcCardID;
     public static File file;
     ImageView btLogo, yorkLogo, nfcLogo, loginIcon, pwIcon;
+    TextView registerTextView;
     Boolean loginAccepted = false;
     EditText userIDInput, passwordInput;
     Button loginButton, registerButton;
     MockServer mockServer = new MockServer();
-    private NfcAdapter loginNfcAdapter;
     UserDataPersistance udp = new UserDataPersistance();
+    private NfcAdapter loginNfcAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //register button
+        //register button, starts register activity and resets nfc logo
         registerButton = (Button) findViewById(R.id.registerButton);
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void authUser() {
-       int auth = mockServer.authenticateUser(userIDInput.getText().toString(), passwordInput.getText().toString(), nfcCardID);
+        int auth = mockServer.authenticateUser(userIDInput.getText().toString(), passwordInput.getText().toString(), nfcCardID);
         switch (auth) {
             case 0:
                 showToast("Login successful.");
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), string, Toast.LENGTH_LONG).show();
     }
 
-//    method is called when a new intent is thrown to the main activity. The logic then handles the
+    //    method is called when a new intent is thrown to the main activity. The logic then handles the
 //     NFC data and captures the Ndef information and parses it. The card ID is then added to the userID
 //     and password and sent to the server for authentication
     @Override

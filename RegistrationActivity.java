@@ -96,9 +96,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 } else if (nfcCardID == null) {
                     Toast.makeText(getApplicationContext(), "Please tap NFC Card to the mobile device.", Toast.LENGTH_LONG).show();
                 } else {
-                    //create new user note empty string
-                    //User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
-                    //send request to mock server, cardID tba
+                    //create new user note empty string, send request to server
                     mockServer.registerUser(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), nfcCardID);
                     //add to hashmap and return to main intent
                     Intent returnToMainIntent = new Intent(RegistrationActivity.this, MainActivity.class);
