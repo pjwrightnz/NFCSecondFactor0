@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -12,13 +13,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class RegisterstrationActivity extends AppCompatActivity {
+public class RegistrationActivity extends AppCompatActivity {
 
     //registration activity for creating a new account
-
     Button createAccountButton;
     EditText userIDEditText, passwordEditText, reenterPasswordEditText, emailEditText;
     ImageView nfcLogo, bTLogo, yorkLogo, loginIcon, pwIcon, emailIcon, repwIcon;
+    String nfcCardID = "";
+    NfcAdapter registerNfcAdapter;
+    MockServer mockServer = new MockServer();
 
     public static Boolean checkNull(String input) {
 
@@ -64,6 +67,17 @@ public class RegisterstrationActivity extends AppCompatActivity {
         reenterPasswordEditText = (EditText) findViewById(R.id.reenterPasswordEditText);
         emailEditText = (EditText) findViewById(R.id.emailEditText);
 
+        registerNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        //  check if there is an NFC capability of the phone
+        if (registerNfcAdapter == null) {
+            Toast.makeText(this, "This device doesn't support NFC. Second Factor Authentication unavailable", Toast.LENGTH_LONG).show();
+        }
+        // check NFC is enabled
+        if (!registerNfcAdapter.isEnabled()) {
+            Toast.makeText(getApplicationContext(), "Please activate NFC to allow second factor authentication and press Back to return to the application.", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+        }
+
         //create account button
         createAccountButton = (Button) findViewById(R.id.createAccountButton);
         //set up listener for when button is clicked
@@ -78,27 +92,28 @@ public class RegisterstrationActivity extends AppCompatActivity {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "Your passwords do not match, please reenter.", Toast.LENGTH_LONG).show();
-                    //check if userID is already in use, if so throw Toast...
+                    //check if userID is already in use, if so throw Toast.
                 } else if (UserDataPersistance.userData.containsKey(userIDEditText.getText().toString())) {
                     passwordEditText.setText("");
                     reenterPasswordEditText.setText("");
                     Toast.makeText(getApplicationContext(), "This UserID is already in use, please select a different UserID.", Toast.LENGTH_LONG).show();
                     //if all the above checks are passed, register user, save their details and return them back to main activity. UserID is passed back.
+                } else if (nfcCardID == null) {
+                    Toast.makeText(getApplicationContext(), "Please tap NFC Card to the mobile device.", Toast.LENGTH_LONG).show();
                 } else {
                     //create new user note empty string
-                    User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
+                    //User newUser = new User(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
+                    //send request to mock server, cardID tba
+                    mockServer.registerUser(userIDEditText.getText().toString(), passwordEditText.getText().toString(), emailEditText.getText().toString(), "");
                     //add to hashmap
-                    new UserDataPersistance().addNewUser(newUser);
+                    //new UserDataPersistance().addNewUser(newUser);
                     //return to main intent
-                    Intent returnToMainIntent = new Intent(RegisterstrationActivity.this, MainActivity.class);
-                    ;
+                    Intent returnToMainIntent = new Intent(RegistrationActivity.this, MainActivity.class);
                     returnToMainIntent.putExtra(MainActivity.userID, userIDEditText.getText().toString());
                     setResult(1, returnToMainIntent);
                     finish();
-                    Toast.makeText(getApplicationContext(), "Your new account has been created.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Your account has been created.", Toast.LENGTH_SHORT).show();
                 }
-
-
             }
         });
 
@@ -107,13 +122,13 @@ public class RegisterstrationActivity extends AppCompatActivity {
 
     public void onNewIntent(Intent intent) {
 
-        Tag myTag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         Log.i("tag ID", bytesToHexString(myTag.getId()));
-
 
         if (myTag != null) {
             nfcLogo.setImageResource(R.drawable.tick);
-            getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
+           // getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
+            //nfcCardID = bytesToHexString(myTag.getId());
         }
         super.onNewIntent(intent);
     }

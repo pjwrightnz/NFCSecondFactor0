@@ -1,10 +1,10 @@
 package com.example.paul.nfcsecondfactor0;
 
 import android.util.Log;
-
+import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
-
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Paul on 1/02/2016.
@@ -13,6 +13,10 @@ public class MockServer {
 
     Persister persister = new Persister();
     File file;
+    Serializer serializer;
+    int PASSWORD_FAILED = 2;
+    int NFC_FAILED = 1;
+    int AUTHENTICATED = 0;
 
     /*
      * service to create/register a new user.
@@ -24,36 +28,44 @@ public class MockServer {
         //create new user, check if user already exists
         User newUser = new User(userID, password, nfcCardID, email);
 
-        file = new File("StoredData/"+userID+".xml");
-        //persistance for the user, exc exception thrown
+        serializer = persister;
+        file = new File(MainActivity.file + "_" + userID + ".xml");
         try {
-            persister.write(newUser, file);
-            userRegistered = true;
+            serializer.write(newUser,file);
         } catch (Exception e) {
-            Log.d("File Handling Error", e.toString());
+            e.printStackTrace();
         }
+
+        Log.i("TAG", file.getAbsolutePath());
+        userRegistered = true;
+
         return userRegistered;
     }
 
-    public Boolean authenticateUser(String userID, String password, String nfcCardID) {
+    public int authenticateUser(String userID, String password, String nfcCardID) {
 
-        file = new File("StoredData/"+userID+".xml");
-        //get user, check if password matches
-        User regUser = null;
-        try {
-            regUser = persister.read(User.class, file);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+        int returnValue = 2;
+        file = new File(MainActivity.file + "_" + userID + ".xml");
+        if(file.exists()) {
+            try {
+                User regUser = null;
+                regUser = persister.read(User.class, file);
+                if(regUser.getPassword().equals(password)) {
+                    returnValue=1;
+                    if(regUser.getNfcCardID().equals(nfcCardID)) {
+                        returnValue = 0;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-
-        if (regUser.getPassword() == password && regUser.getNfcCardID() == nfcCardID) {
-            return true;
-        } else {
-
-            return false;
-        }
+        return returnValue;
     }
 
+    private void writeObject(java.io.ObjectOutputStream out)
+            throws IOException {
 
+
+    }
 }

@@ -1,7 +1,6 @@
 package com.example.paul.nfcsecondfactor0;
 
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
@@ -13,34 +12,36 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
     public static String userID;
+    public static File file;
     ImageView btLogo, yorkLogo, nfcLogo, loginIcon, pwIcon;
     Boolean loginAccepted = false;
     EditText userIDInput, passwordInput;
     Button loginButton, registerButton;
+    MockServer mockServer = new MockServer();
     private NfcAdapter loginNfcAdapter;
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        file = getFilesDir();
 
         // set Icon
         ActionBar menu = getSupportActionBar();
@@ -76,13 +77,7 @@ public class MainActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                checkUserIDExists();
-                checkLoginDetails();
-                showToast();
-                Intent newBTWebIntent = new Intent(MainActivity.this, BTWebSiteActivity.class);
-                if (loginAccepted) {
-                    startActivityForResult(newBTWebIntent, 0);
-                }
+                authUser();
             }
         });
 
@@ -91,15 +86,8 @@ public class MainActivity extends AppCompatActivity {
         passwordInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    checkUserIDExists();
-                    checkLoginDetails();
-                    showToast();
-                    Intent newBTWebIntent = new Intent(MainActivity.this, BTWebSiteActivity.class);
-                    startActivity(newBTWebIntent);
-                    return true;
-                }
-                return false;
+                authUser();
+                return true;
             }
         });
 
@@ -110,9 +98,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 nfcLogo.setImageResource(R.drawable.nfclogo);
                 getWindow().getDecorView().findViewById(android.R.id.content).invalidate();
-                Intent newRegisterIntent = new Intent(MainActivity.this, RegisterstrationActivity.class);
+                Intent newRegisterIntent = new Intent(MainActivity.this, RegistrationActivity.class);
                 startActivityForResult(newRegisterIntent, 0);
-
             }
         });
         //populate user persistance with a test user
@@ -129,42 +116,30 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Please activate NFC to allow second factor authentication and press Back to return to the application.", Toast.LENGTH_LONG).show();
             startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
         }
-        //loginNfcAdapter.enableReaderMode(this, 0, NfcAdapter.FLAG_READER_NFC_B | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,null);
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-    private void showToast() {
-        Context context = getApplicationContext();
-        CharSequence loginToastMessage = "Login failed, please try again.";
-        if (loginAccepted) {
-            loginToastMessage = "Login Successful.";
-            userIDInput.setText("");
-            passwordInput.setText("");
+    private void authUser() {
+        int auth = mockServer.authenticateUser(userIDInput.getText().toString(), passwordInput.getText().toString(), "");
+        switch (auth) {
+            case 0:
+                showToast("Login successful.");
+                Intent newBTWebIntent = new Intent(MainActivity.this, BTWebSiteActivity.class);
+                startActivityForResult(newBTWebIntent, 0);
+                break;
+            case 1:
+                showToast("Your NFC Card did not match the card registered for your account, please try again");
+                break;
+            case 2:
+                showToast("Your password did not match the password for your account, please try again");
+                break;
+            default:
+                showToast("Login failed, please try again");
         }
 
     }
 
-    private boolean checkUserIDExists() {
-        if (UserDataPersistance.userData.containsKey(userIDInput.getText().toString())) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private void checkLoginDetails() {
-        if (UserDataPersistance.checkUserData(userIDInput.getText().toString()))
-            if (passwordInput.getText().toString().equals(UserDataPersistance.userData.get(userIDInput.getText().toString()).getPassword())) {
-                loginAccepted = true;
-                //userIDInput.setText(UserDataPersistance.checkUserData(userIDInput.getText().toString()));
-            } else {
-                showToast();
-            }
-        else {
-            showToast();
-        }
+    private void showToast(String string) {
+        Toast.makeText(getApplicationContext(), string, Toast.LENGTH_LONG).show();
     }
 
     //method is called when a new intent is thrown to the main activity. The logic then handles the
@@ -173,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onNewIntent(Intent intent) {
 
-        Tag myTag = (Tag) intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        Tag myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         Log.i("tag ID", bytesToHexString(myTag.getId()));
 
 
@@ -195,7 +170,6 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < src.length; i++) {
             buffer[0] = Character.forDigit((src[i] >>> 4) & 0x0F, 16);
             buffer[1] = Character.forDigit(src[i] & 0x0F, 16);
-            System.out.println(buffer);
             stringBuilder.append(buffer);
         }
         return stringBuilder.toString();
@@ -230,11 +204,5 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
-
-    private void handleIntent(Intent intent) {
-
-    }
-
 
 }

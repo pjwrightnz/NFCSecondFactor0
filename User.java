@@ -3,12 +3,16 @@ package com.example.paul.nfcsecondfactor0;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
+import java.io.Serializable;
+
 /**
  * Created by Paul on 27/01/2016.
  */
 
 @Root
-public class User {
+public class User implements Serializable{
+
+    private static final long serialVersionUID = 0L;
 
     @Element
     String userID;
@@ -60,6 +64,8 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+
 
 
 
